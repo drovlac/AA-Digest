@@ -3,7 +3,7 @@ name: AA Digest
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 2 * * *" # daily 2:00 UTC (adjust later)
+    - cron: "*/15 * * * *" # every 15 minutes
 
 jobs:
   run:
