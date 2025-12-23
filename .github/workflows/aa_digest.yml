@@ -1,16 +1,16 @@
 name: AA Digest
 
 on:
-  schedule:
-    - cron: "*/15 * * * *"   # every 15 minutes (UTC)
   workflow_dispatch:
+  schedule:
+    - cron: "0 2 * * *" # daily 2:00 UTC (adjust later)
 
 jobs:
   run:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Set up Python
@@ -23,22 +23,32 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r aa-digest/requirements.txt
 
-      - name: Rebuild Gmail auth files
+      - name: Rebuild Gmail auth files from secrets
         env:
           GMAIL_CREDENTIALS_B64: ${{ secrets.GMAIL_CREDENTIALS_B64 }}
           GMAIL_TOKEN_B64: ${{ secrets.GMAIL_TOKEN_B64 }}
         run: |
-          python - <<'PY'
-          import base64, os
-          open("aa-digest/credentials.json","wb").write(base64.b64decode(os.environ["GMAIL_CREDENTIALS_B64"]))
-          open("aa-digest/token.pickle","wb").write(base64.b64decode(os.environ["GMAIL_TOKEN_B64"]))
+          python - << 'PY'
+          import os, base64, sys
+          creds_b64 = os.environ.get("GMAIL_CREDENTIALS_B64", "")
+          token_b64 = os.environ.get("GMAIL_TOKEN_B64", "")
+          if not creds_b64 or not token_b64:
+              print("Missing secrets: GMAIL_CREDENTIALS_B64 or GMAIL_TOKEN_B64")
+              sys.exit(1)
+
+          creds = base64.b64decode(creds_b64)
+          token = base64.b64decode(token_b64)
+
+          open("aa-digest/credentials.json", "wb").write(creds)
+          open("aa-digest/token.pickle", "wb").write(token)
+          print("Auth files written.")
           PY
 
       - name: Run AA Digest
         env:
+          LABEL_NAME: ${{ secrets.LABEL_NAME }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-          LABEL_NAME: ${{ secrets.LABEL_NAME }}
         run: |
           cd aa-digest
           python main.py
