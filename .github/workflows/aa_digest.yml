@@ -30,8 +30,8 @@ jobs:
         run: |
           python - <<'PY'
           import base64, os
-          open("credentials.json","wb").write(base64.b64decode(os.environ["GMAIL_CREDENTIALS_B64"]))
-          open("token.pickle","wb").write(base64.b64decode(os.environ["GMAIL_TOKEN_B64"]))
+          open("aa-digest/credentials.json","wb").write(base64.b64decode(os.environ["GMAIL_CREDENTIALS_B64"]))
+          open("aa-digest/token.pickle","wb").write(base64.b64decode(os.environ["GMAIL_TOKEN_B64"]))
           PY
 
       - name: Run AA Digest
